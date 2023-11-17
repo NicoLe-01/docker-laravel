@@ -1,0 +1,52 @@
+version: '3'
+services:
+  # Service untuk aplikasi Laravel
+  app:
+    image: my-laravel-app:latest
+    container_name: laravel-app
+    restart: always
+    ports:
+      - "8000:80"
+    depends_on:
+      - db
+      - storage
+    volumes:
+      - ./laravel-app:/var/www/html
+    environment:
+      DB_HOST: db
+      DB_DATABASE: laravel
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      STORAGE_URL: http://storage:9000
+      STORAGE_KEY: MINIO_ROOT_USER
+      STORAGE_SECRET: MINIO_ROOT_PASSWORD
+    command: ["sh", "-c", "sleep 10 && apache2-foreground"]
+
+  # Service untuk database MySQL
+  db:
+    image: mysql:latest
+    container_name: mysql-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: laravel
+      MYSQL_PASSWORD: root
+    volumes:
+      - ./mysql-data:/var/lib/mysql
+
+  # Service untuk storage Minio
+  storage:
+    image: minio/minio:RELEASE.2020-03-05T01-04-19Z
+    container_name: minio-storage
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+    environment:
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio123
+    volumes:
+      - ./minio-data:/data
+      - ./minio-config:/root/.minio
+    command: server /data
+
+  
